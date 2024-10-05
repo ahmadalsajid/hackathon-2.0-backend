@@ -101,3 +101,7 @@ Then retry for another 2-3 times.
 
 4. Make an api ( Post Request ), that will trigger comment posting, make sure to add authentication middleware. 
 Only authenticated users can trigger comments posting
+
+## Solution notes
+* `app` container may show error on the first run, please restart the `app` conainer and it will connect to the database and work properly.
+* 

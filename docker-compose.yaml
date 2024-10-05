@@ -1,6 +1,21 @@
 
 services:
 
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: rabbitmq
+    hostname: rabbitmq
+    restart: unless-stopped
+    volumes:
+      - ./rabbitmq_data:/var/lib/rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+    ports:
+      - 5672:5672
+      - 15672:15672
+
   db:
     image: postgres:14.0-alpine
     container_name: db
@@ -42,10 +57,67 @@ services:
     depends_on:
       - db
       - redis
+      - rabbitmq
     volumes:
       - type: bind
         source: ./src
         target: /src
     environment:
+      X_API_KEY: a327ec58sk_f42csk_43e9sk_9aabsk_faaf700a456e1728099608
       DATABASE_URL: postgres://django:django@db/contentapi
       REDIS_URL: redis://redis:6379/1
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+
+  celery-worker:
+    build:
+      context: .
+      dockerfile: DockerFile
+    container_name: celery-worker
+    hostname: celery-worker
+    working_dir: /src
+    command: celery -A contentapi worker -l info
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: ./src
+        target: /src
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+      - app
+    environment:
+      X_API_KEY: a327ec58sk_f42csk_43e9sk_9aabsk_faaf700a456e1728099608
+      DATABASE_URL: postgres://django:django@db/contentapi
+      REDIS_URL: redis://redis:6379/1
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: DockerFile
+    container_name: celery-beat
+    hostname: celery-beat
+    working_dir: /src
+    command: celery -A contentapi beat -l info
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: ./src
+        target: /src
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+      - app
+    environment:
+      X_API_KEY: a327ec58sk_f42csk_43e9sk_9aabsk_faaf700a456e1728099608
+      DATABASE_URL: postgres://django:django@db/contentapi
+      REDIS_URL: redis://redis:6379/1
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
