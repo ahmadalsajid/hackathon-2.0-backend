@@ -1,4 +1,5 @@
 .venv
+db/
 db/data/*
 db/data_2/*
 db/dump.sql

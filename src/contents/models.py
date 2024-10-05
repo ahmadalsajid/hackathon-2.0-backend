@@ -3,7 +3,7 @@ from django.db import models
 
 class Author(models.Model):
     """
-    TODO: When the data is being created or updated we don't know, need to add that information
+    TODO: When the data is being created or updated we don't know, need to add that information - DONE
     """
     name = models.CharField(max_length=100)
     username = models.CharField(max_length=100)
@@ -20,7 +20,7 @@ class Author(models.Model):
 
 class Content(models.Model):
     """
-    TODO: When the data is being created or updated we don't know, need to add that information
+    TODO: When the data is being created or updated we don't know, need to add that information - DONE
     """
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     unique_id = models.CharField(max_length=1024, )
@@ -41,7 +41,7 @@ class Content(models.Model):
 
 class Tag(models.Model):
     """
-    TODO: The tag is being duplicated sometimes, need to do something in the database.
+    TODO: The tag is being duplicated sometimes, need to do something in the database. - DONE
     Filtering
     """
     # name = models.CharField(max_length=100)
@@ -54,7 +54,7 @@ class Tag(models.Model):
 
 class ContentTag(models.Model):
     """
-    TODO: The content and tag is being duplicated, need to do something in the database
+    TODO: The content and tag is being duplicated, need to do something in the database - DONE
     """
     content = models.ForeignKey(Content, related_name='content_tags', on_delete=models.CASCADE)
     tag = models.ForeignKey(Tag, related_name='content_tags', on_delete=models.CASCADE)

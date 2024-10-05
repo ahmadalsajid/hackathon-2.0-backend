@@ -1,3 +1,4 @@
+from django.db.models import Sum, Count
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -23,8 +24,8 @@ class ContentAPIView(APIView):
          Example: api_url?timeframe=7, will get contents that has timestamp now - '7' days
          --------------------------------
          So things to do:
-         1. Make the api performant
-         2. Fix the additional data point in the schema
+         1. Make the api performant - DONE
+         2. Fix the additional data point in the schema - DONE
             - Total Engagement = like_count + comment_count + share_count
             - Engagement Rate = Total Engagement / Views
             - Tags: List of tags connected with the content
@@ -176,8 +177,8 @@ class ContentStatsAPIView(APIView):
             - title (insensitive match IE: SQL `ilike %text%`)
      -------------------------
      Things To do:
-     1. Make the api performant
-     2. Fix the additional data point (IE: total engagement, total engagement rate)
+     1. Make the api performant - DONE
+     2. Fix the additional data point (IE: total engagement, total engagement rate) - DONE
      3. Filter Support for client side
          - author_id: Author's db id
          - author_id: Author's db id
@@ -188,32 +189,32 @@ class ContentStatsAPIView(APIView):
      --------------------------
      Bonus: What changes do we need if we want timezone support?
     """
+
     def get(self, request):
         query_params = request.query_params.dict()
         tag = query_params.get('tag', None)
-        data = {
-            "total_likes": 0,
-            "total_shares": 0,
-            "total_views": 0,
-            "total_comments": 0,
-            "total_engagement": 0,
-            "total_engagement_rate": 0,
-            "total_contents": 0,
-            "total_followers": 0,
-        }
+        items_per_page = int(query_params.get('items_per_page', '10'))
+        page = int(query_params.get('page', '1'))
+        _start_index = (page - 1) * items_per_page
+        _end_index = _start_index + items_per_page
+
         if tag:
             queryset = Content.objects.filter(
                 contentag__tag__name=tag
-            )
+            )[_start_index:_end_index]
         else:
-            queryset = Content.objects.all()
-        for query in queryset:
-            data["total_likes"] += query.like_count
-            data["total_shares"] += query.share_count
-            data["total_comments"] += query.comment_count
-            data["total_views"] += query.view_count
-            data["total_engagement"] += data["total_likes"] + data["total_shares"] + data["total_comments"]
-            data["total_followers"] += query.author.followers
-            data["total_contents"] += 1
+            queryset = Content.objects.all()[_start_index:_end_index]
 
-        return Response(data, status=status.HTTP_201_CREATED)
+        _data = queryset.aggregate(
+            total_likes=Sum("like_count"),
+            total_shares=Sum("share_count"),
+            total_comments=Sum("comment_count"),
+            total_views=Sum("view_count"),
+            total_engagement=(Sum("like_count") + Sum("share_count") + Sum("comment_count")),
+            total_engagement_rate=(Sum("like_count") + Sum("share_count") + Sum("comment_count")) / Sum(
+                'view_count') if Sum('view_count') else 0,
+            total_followers=Sum('author__followers'),
+            total_contents=Count(1),
+        )
+        print(_data)
+        return Response(_data, status=status.HTTP_201_CREATED)
