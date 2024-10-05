@@ -35,20 +35,25 @@ class ContentAPIView(APIView):
             - tag_id: Tag ID
             - title (insensitive match IE: SQL `ilike %text%`)
          4. Must not change the inner api schema
-         5. Remove metadata and secret value from schema
-         6. Add pagination
+         5. Remove metadata and secret value from schema - DONE
+         6. Add pagination - DONE
             - Should have page number pagination
             - Should have items per page support in query params
             Example: `api_url?items_per_page=10&page=2`
         """
+
         query_params = request.query_params.dict()
         tag = query_params.get('tag', None)
+        items_per_page = int(query_params.get('items_per_page', '10'))
+        page = int(query_params.get('page', '1'))
+        _start_index = (page - 1) * items_per_page
+        _end_index = _start_index + items_per_page
         if tag:
             queryset = Content.objects.filter(
                 contenttag__tag__name=tag
-            ).order_by("-id")[:1000]
+            ).order_by("-id")[_start_index:_end_index]
         else:
-            queryset = Content.objects.all()
+            queryset = Content.objects.all()[_start_index:_end_index]
         data_list = []
         for query in queryset:
             author = Author.objects.get(id=query.author_id)
@@ -58,26 +63,6 @@ class ContentAPIView(APIView):
             }
             data_list.append(data)
         serialized = ContentSerializer(data_list, many=True)
-        for serialized_data in serialized.data:
-            # Calculating `Total Engagement`
-            # Calculating `Engagement Rate`
-            like_count = serialized_data.get("like_count", 0)
-            comment_count = serialized_data.get("comment_count", 0)
-            share_count = serialized_data.get("share_count", 0)
-            view_count = serialized_data.get("view_count", 0)
-            total_engagement = like_count + comment_count + share_count
-            if view_count > 0:
-                engagement_rate = total_engagement / view_count
-            else:
-                engagement_rate = 0
-            serialized_data["content"]["engagement_rate"] = engagement_rate
-            serialized_data["content"]["total_engagement"] = total_engagement
-            tags = list(
-                ContentTag.objects.filter(
-                    content_id=serialized_data["content"]["id"]
-                ).values_list("tag__name", flat=True)
-            )
-            serialized_data["content"]["tags"] = tags
         return Response(serialized.data, status=status.HTTP_200_OK)
 
     def post(self, request, ):

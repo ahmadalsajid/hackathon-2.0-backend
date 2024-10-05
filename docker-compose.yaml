@@ -3,6 +3,8 @@ services:
 
   db:
     image: postgres:14.0-alpine
+    container_name: db
+    hostname: db
     restart: unless-stopped
     volumes:
       - ./db/data/:/var/lib/postgresql/data/
@@ -10,17 +12,24 @@ services:
       POSTGRES_DB: contentapi
       POSTGRES_USER: django
       POSTGRES_PASSWORD: django
+    ports:
+      - 5432:5432
     expose:
       - 5432
 
   redis:
     restart: on-failure
     image: redis:7.2.1
+    hostname: redis
+    container_name: redis
+    ports:
+      - 6379:6379
     expose:
       - 6379
 
   app:
     container_name: contentapi
+    hostname: app
     build:
       context: .
       dockerfile: DockerFile

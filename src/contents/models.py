@@ -13,6 +13,9 @@ class Author(models.Model):
     big_metadata = models.JSONField(blank=True, null=True)
     secret_value = models.JSONField(blank=True, null=True)
     followers = models.IntegerField(default=0)
+    # Timestamp fields
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 class Content(models.Model):
@@ -31,6 +34,9 @@ class Content(models.Model):
     timestamp = models.DateTimeField(blank=True, null=True, )
     big_metadata = models.JSONField(blank=True, null=True)
     secret_value = models.JSONField(blank=True, null=True)
+    # Timestamp fields
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 class Tag(models.Model):
@@ -38,16 +44,26 @@ class Tag(models.Model):
     TODO: The tag is being duplicated sometimes, need to do something in the database.
     Filtering
     """
-    name = models.CharField(max_length=100)
+    # name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True, null=True)
+    # Timestamp fields
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 class ContentTag(models.Model):
     """
     TODO: The content and tag is being duplicated, need to do something in the database
     """
-    content = models.ForeignKey(Content, on_delete=models.CASCADE)
-    tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
+    content = models.ForeignKey(Content, related_name='content_tags', on_delete=models.CASCADE)
+    tag = models.ForeignKey(Tag, related_name='content_tags', on_delete=models.CASCADE)
+    # Timestamp fields
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = (('content', 'tag'),)
 
 
 class MegaEcommerce(models.Model):

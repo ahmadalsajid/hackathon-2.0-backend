@@ -1,19 +1,36 @@
 from rest_framework import serializers
 
-from contents.models import Content, Author
+from contents.models import Content, Author, ContentTag
 
 
 # For Reading the data from the DB
 class AuthorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Author
-        fields = '__all__'
+        # fields = '__all__'
+        exclude = ['big_metadata', 'secret_value']
 
 
 class ContentBaseSerializer(serializers.ModelSerializer):
+    total_engagement = serializers.SerializerMethodField()
+    engagement_rate = serializers.SerializerMethodField()
+    tags = serializers.SerializerMethodField()
+
+    def get_tags(self, obj):
+        return list(
+            obj.content_tags.values_list("tag__name", flat=True)
+        )
+
+    def get_total_engagement(self, obj):
+        return obj.like_count + obj.comment_count + obj.share_count
+
+    def get_engagement_rate(self, obj):
+        return (obj.like_count + obj.comment_count + obj.share_count) / obj.view_count if obj.view_count else 0
+
     class Meta:
         model = Content
-        fields = '__all__'
+        # fields = '__all__'
+        exclude = ['big_metadata', 'secret_value']
 
 
 class ContentSerializer(serializers.Serializer):
