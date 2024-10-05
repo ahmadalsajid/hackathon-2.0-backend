@@ -104,4 +104,4 @@ Only authenticated users can trigger comments posting
 
 ## Solution notes
 * `app` container may show error on the first run, please restart the `app` conainer and it will connect to the database and work properly.
-* 
+* Task2, part 1 done for every minute

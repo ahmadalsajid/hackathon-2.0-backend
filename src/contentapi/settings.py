@@ -138,4 +138,9 @@ CELERY_BEAT_SCHEDULE = {  # scheduler configuration
         'schedule': crontab(minute='*/1'),  # crontab() runs the task every minute
         # 'schedule': crontab(minute='1', hour='0'),  # crontab(minute='1', hour='0') runs the task everyday at 00:01 am
     },
+    'pull_AIGeneratedComment': {  # the task name you want
+        'task': 'contents.tasks.pull_AIGeneratedComment',  # name of task with path
+        'schedule': crontab(minute='*/1'),  # crontab() runs the task every minute
+        # 'schedule': crontab(minute='1', hour='0'),  # crontab(minute='1', hour='0') runs the task everyday at 00:01 am
+    },
 }
